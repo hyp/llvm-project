@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <cassert>
 #include "InterpStack.h"
 
 using namespace clang;

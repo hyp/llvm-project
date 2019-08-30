@@ -37,6 +37,33 @@ ComparisonCategoryResult Compare(const T &X, const T &Y) {
   return ComparisonCategoryResult::Equal;
 }
 
+
+// Helper structure to select the representation.
+template <unsigned Bits, bool Signed> struct Repr;
+
+template <> struct Repr<1, false> { using Type = bool; };
+template <> struct Repr<8, false> { using Type = uint8_t; };
+template <> struct Repr<16, false> { using Type = uint16_t; };
+template <> struct Repr<32, false> { using Type = uint32_t; };
+template <> struct Repr<64, false> { using Type = uint64_t; };
+template <> struct Repr<8, true> { using Type = int8_t; };
+template <> struct Repr<16, true> { using Type = int16_t; };
+template <> struct Repr<32, true> { using Type = int32_t; };
+template <> struct Repr<64, true> { using Type = int64_t; };
+
+
+/// Helper structure to select the min and max value.
+template <unsigned Bits, bool Signed> struct IntegralLimits {
+  using Type = typename Repr<Bits, Signed>::Type;
+  static const auto Min = std::numeric_limits<Type>::min();
+  static const auto Max = std::numeric_limits<Type>::max();
+};
+
+template <> struct IntegralLimits<1, false> {
+  static const bool Min = false;
+  static const bool Max = true;
+};
+
 /// Wrapper around numeric types.
 ///
 /// These wrappers are required to shared an interface between APSint and
@@ -46,35 +73,13 @@ template <unsigned Bits, bool Signed> class Integral {
 private:
   template <unsigned OtherBits, bool OtherSigned> friend class Integral;
 
-  // Helper structure to select the representation.
-  template <unsigned B, bool S> struct Repr;
-  template <> struct Repr<1, false> { using Type = bool; };
-  template <> struct Repr<8, false> { using Type = uint8_t; };
-  template <> struct Repr<16, false> { using Type = uint16_t; };
-  template <> struct Repr<32, false> { using Type = uint32_t; };
-  template <> struct Repr<64, false> { using Type = uint64_t; };
-  template <> struct Repr<8, true> { using Type = int8_t; };
-  template <> struct Repr<16, true> { using Type = int16_t; };
-  template <> struct Repr<32, true> { using Type = int32_t; };
-  template <> struct Repr<64, true> { using Type = int64_t; };
-
-  /// Helper structure to select the min value.
-  template <unsigned B, bool S> struct Limits {
-    using Type = typename Repr<Bits, Signed>::Type;
-    static const auto Min = std::numeric_limits<Type>::min();
-    static const auto Max = std::numeric_limits<Type>::max();
-  };
-  template <> struct Limits<1, false> {
-    static const bool Min = false;
-    static const bool Max = true;
-  };
 
   // The primitive representing the integral.
   using T = typename Repr<Bits, Signed>::Type;
   T V;
 
   /// Primitive representing limits.
-  using Limit = Limits<Bits, Signed>;
+  using Limit = IntegralLimits<Bits, Signed>;
 
   /// Construct an integral from anything that is convertible to storage.
   template <typename T> explicit Integral(T V) : V(V) {}

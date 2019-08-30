@@ -34,7 +34,7 @@ public:
     const RecordDecl *Decl;
     unsigned Offset;
     Descriptor *Desc;
-    Record *Record;
+    Record *R;
   };
 
   /// Mapping from identifiers to field descriptors.

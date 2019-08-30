@@ -298,10 +298,10 @@ void ClangOpcodesEmitter::EmitGroup(raw_ostream &OS, StringRef N, Record *R) {
         TS.pop_back();
       }
       // Emit a default case if not all types are present.
-      if (Cases.size() < NumTypes) {
-        OS << "default: llvm_unreachable(\"invalid\");\n";
-      }
+      if (Cases.size() < NumTypes)
+        OS << "default: llvm_unreachable(\"invalid type\");\n";
       OS << "}\n";
+      OS << "llvm_unreachable(\"invalid enum value\");\n";
     } else {
       PrintFatalError("Expected a type class");
     }
