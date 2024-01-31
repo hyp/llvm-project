@@ -2566,6 +2566,7 @@ StackOffset X86FrameLowering::getFrameIndexReference(const MachineFunction &MF,
     Offset += getOffsetOfLocalArea();
   }
 
+  int64_t NegativeFPDelta = 0;
   if (IsWin64Prologue) {
     assert(!MFI.hasCalls() || (StackSize % 16) == 8);
 
@@ -2587,6 +2588,9 @@ StackOffset X86FrameLowering::getFrameIndexReference(const MachineFunction &MF,
     FPDelta = FrameSize - SEHFrameOffset;
     assert((!MFI.hasCalls() || (FPDelta % 16) == 0) &&
            "FPDelta isn't aligned per the Win64 ABI!");
+
+    if (X86FI->hasSwiftAsyncContext())
+      NegativeFPDelta = 16;
   }
 
   if (FrameReg == TRI->getFramePtr()) {
@@ -2600,6 +2604,9 @@ StackOffset X86FrameLowering::getFrameIndexReference(const MachineFunction &MF,
     int TailCallReturnAddrDelta = X86FI->getTCReturnAddrDelta();
     if (TailCallReturnAddrDelta < 0)
       Offset -= TailCallReturnAddrDelta;
+
+    if (Offset < 0 && NegativeFPDelta)
+      Offset -= NegativeFPDelta;
 
     return StackOffset::getFixed(Offset);
   }
